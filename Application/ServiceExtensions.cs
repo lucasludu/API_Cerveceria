@@ -1,4 +1,4 @@
-﻿using Application.Behaviours;
+using Application.Behaviours;
 using Application.Features._auth.Commands.RegisterUserCommands;
 using FluentValidation;
 using MediatR;
@@ -15,6 +15,7 @@ namespace Application
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
         }
     }
 }

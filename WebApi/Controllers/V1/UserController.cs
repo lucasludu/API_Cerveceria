@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
+using Application.Parameters;
 
 namespace WebApi.Controllers.V1
 {
@@ -14,7 +15,7 @@ namespace WebApi.Controllers.V1
         }
 
         [HttpGet("get-all")]
-        public async Task<IActionResult> GetAllUsers([FromBody] string request)
+        public async Task<IActionResult> GetAllUsers([FromQuery] RequestParameters filter)
         {
             return Ok();
         }

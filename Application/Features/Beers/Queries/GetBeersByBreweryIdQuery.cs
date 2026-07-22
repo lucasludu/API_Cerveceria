@@ -1,23 +1,30 @@
 using Application.Features.Beers.DTOs;
 using Application.Interfaces;
+using Application.Parameters;
 using Application.Wrappers;
-using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Application.Features.Beers.Queries
 {
-    public class GetBeersByBreweryIdQuery : IRequest<Response<IEnumerable<BeerDto>>>
+    public class GetBeersByBreweryIdQuery : RequestParameters, IRequest<PagedResponse<IEnumerable<BeerDto>>>, ICacheableQuery
     {
         public Guid BreweryId { get; set; }
+
+        [JsonIgnore]
+        public string CacheKey => $"Beers_{BreweryId}_{PageNumber}_{PageSize}";
+        
+        [JsonIgnore]
+        public TimeSpan? Expiration => TimeSpan.FromMinutes(10);
     }
 
-    public class GetBeersByBreweryIdQueryHandler : IRequestHandler<GetBeersByBreweryIdQuery, Response<IEnumerable<BeerDto>>>
+    public class GetBeersByBreweryIdQueryHandler : IRequestHandler<GetBeersByBreweryIdQuery, PagedResponse<IEnumerable<BeerDto>>>
     {
         private readonly IApplicationDbContext _context;
 
@@ -26,10 +33,17 @@ namespace Application.Features.Beers.Queries
             _context = context;
         }
 
-        public async Task<Response<IEnumerable<BeerDto>>> Handle(GetBeersByBreweryIdQuery request, CancellationToken cancellationToken)
+        public async Task<PagedResponse<IEnumerable<BeerDto>>> Handle(GetBeersByBreweryIdQuery request, CancellationToken cancellationToken)
         {
-            var beers = await _context.Beers
+            var query = _context.Beers
                 .Where(b => b.BreweryId == request.BreweryId)
+                .AsNoTracking();
+
+            var totalRecords = await query.CountAsync(cancellationToken);
+
+            var beers = await query
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
                 .Select(b => new BeerDto
                 {
                     Id = b.Id,
@@ -40,7 +54,7 @@ namespace Application.Features.Beers.Queries
                 })
                 .ToListAsync(cancellationToken);
 
-            return new Response<IEnumerable<BeerDto>>(beers);
+            return new PagedResponse<IEnumerable<BeerDto>>(beers, request.PageNumber, request.PageSize, totalRecords);
         }
     }
 }

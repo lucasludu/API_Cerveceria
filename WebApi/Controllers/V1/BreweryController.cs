@@ -1,4 +1,5 @@
 using Application.Features.Beers.Queries;
+using Application.Parameters;
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 using System;
@@ -10,9 +11,15 @@ namespace WebApi.Controllers.v1
     public class BreweryController : BaseApiController
     {
         [HttpGet("{id}/beers")]
-        public async Task<IActionResult> GetBeers(Guid id)
+        public async Task<IActionResult> GetBeers(Guid id, [FromQuery] RequestParameters filter)
         {
-            return Ok(await Mediator.Send(new GetBeersByBreweryIdQuery { BreweryId = id }));
+            var query = new GetBeersByBreweryIdQuery 
+            { 
+                BreweryId = id, 
+                PageNumber = filter.PageNumber, 
+                PageSize = filter.PageSize 
+            };
+            return Ok(await Mediator.Send(query));
         }
     }
 }
