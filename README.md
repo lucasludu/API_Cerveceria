@@ -23,6 +23,7 @@ La API funciona como el motor principal (*backend*) de una plataforma de distrib
 ### 🌟 Mejoras "Enterprise" Añadidas
 
 A lo largo de la evolución del proyecto, se incorporaron estándares listos para producción (Enterprise Level):
+
 1. **Rendimiento**: Implementación de **Redis Cache** (mediante decoradores) para optimizar consultas frecuentes y **Paginación Dinámica** de resultados.
 2. **Seguridad Avanzada**: Autenticación reforzada con **JWT Refresh Tokens** y Control de Acceso por Roles (RBAC).
 3. **Resiliencia**: Políticas de reintentos (*Retries* y *Timeouts*) gestionadas globalmente por **Polly**.

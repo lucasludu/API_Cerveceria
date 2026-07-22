@@ -26,6 +26,6 @@ Este documento detalla las principales oportunidades de mejora identificadas par
 
 ## 5. Experiencia de Desarrollo y Documentación
 
-* **Manejo de Errores Estandarizado (ProblemDetails)**: Implementar un Middleware global de manejo de excepciones que formatee todos los errores según el estándar RFC 7807 (`ProblemDetails`), proporcionando una estructura consistente para el cliente.
-* **Documentación OpenAPI Moderna (Scalar / Redoc)**: Reemplazar el tradicional Swagger UI por interfaces más modernas y atractivas como **Scalar** o **Redoc**, integradas con `Microsoft.AspNetCore.OpenApi`. Añadir comentarios XML detallados (`/// <summary>`) y especificar los códigos HTTP posibles (200, 400, 401, 404).
-* **Automatización CI/CD**: Crear pipelines en GitHub Actions o Azure DevOps para ejecutar automáticamente linters, pruebas unitarias y generación de reportes de cobertura en cada *Pull Request*.
+- **Manejo de Errores Estandarizado (ProblemDetails)**: Implementar un Middleware global de manejo de excepciones que formatee todos los errores según el estándar RFC 7807 (`ProblemDetails`), proporcionando una estructura consistente para el cliente.
+- **Documentación OpenAPI Moderna (Scalar / Redoc)**: Reemplazar el tradicional Swagger UI por interfaces más modernas y atractivas como **Scalar** o **Redoc**, integradas con `Microsoft.AspNetCore.OpenApi`. Añadir comentarios XML detallados (`/// <summary>`) y especificar los códigos HTTP posibles (200, 400, 401, 404).
+- **Automatización CI/CD**: Crear pipelines en GitHub Actions o Azure DevOps para ejecutar automáticamente linters, pruebas unitarias y generación de reportes de cobertura en cada *Pull Request*.
