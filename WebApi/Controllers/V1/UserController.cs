@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 using Application.Parameters;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApi.Controllers.V1
 {
     [ApiVersion("1.0")]
+    [Authorize(Roles = "Admin")]
     public class UserController : BaseApiController
     {
 

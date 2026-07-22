@@ -1,4 +1,4 @@
-﻿using Application.Interfaces;
+using Application.Interfaces;
 using Application.Wrappers;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -8,6 +8,7 @@ using Application.Features._auth.DTOs.Request;
 using Application.Features._auth.DTOs.Response;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Persistence.Service
@@ -46,9 +47,14 @@ namespace Persistence.Service
             var rol = roles.FirstOrDefault();
 
             var token = await GenerateJwtTokenAsync(user);
+            var refreshToken = GenerateRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // Token válido por 7 días
+            await _userManager.UpdateAsync(user);
 
             return new Response<LoginResponse>(
-                    new LoginResponse { Token = token , UserId = user.Id, Rol = rol! },
+                    new LoginResponse { Token = token , UserId = user.Id, Rol = rol!, RefreshToken = refreshToken },
                     $"Usuario {user.Nombre} logueado correctamente."
                 );
         }
@@ -89,6 +95,34 @@ namespace Persistence.Service
             return Response<ApplicationUser>.Success(user);
         }
 
+        /// <summary>
+        /// Refreshes the JWT token using a valid RefreshToken.
+        /// </summary>
+        public async Task<Response<LoginResponse>> RefreshTokenAsync(RefreshTokenRequest request)
+        {
+            var principal = GetPrincipalFromExpiredToken(request.Token);
+            if (principal == null)
+                return Response<LoginResponse>.Fail("Invalid access token or refresh token.");
+
+            var email = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            var user = await _userManager.FindByEmailAsync(email!);
+
+            if (user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+                return Response<LoginResponse>.Fail("Invalid access token or refresh token.");
+
+            var newAccessToken = await GenerateJwtTokenAsync(user);
+            var newRefreshToken = GenerateRefreshToken();
+
+            user.RefreshToken = newRefreshToken;
+            await _userManager.UpdateAsync(user);
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            return new Response<LoginResponse>(
+                new LoginResponse { Token = newAccessToken, RefreshToken = newRefreshToken, UserId = user.Id, Rol = roles.FirstOrDefault()! },
+                "Token refrescado correctamente."
+            );
+        }
 
         #region Métodos Privados
 
@@ -159,6 +193,38 @@ namespace Persistence.Service
         }
 
         #endregion
+        
+        /// <summary>
+        /// Generate a random string to be used as a Refresh Token.
+        /// </summary>
+        private string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
+
+        private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!)),
+                ValidateLifetime = false // Here we don't care about the token's expiration
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+
+            var jwtSecurityToken = securityToken as JwtSecurityToken;
+            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                throw new SecurityTokenException("Invalid token");
+
+            return principal;
+        }
 
     }
 }

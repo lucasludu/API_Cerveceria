@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using System;
 
 namespace Domain.Entities
 {
@@ -6,5 +7,7 @@ namespace Domain.Entities
     {
         public required string Nombre { get; set; }
         public required string Apellido { get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
     }
 }
