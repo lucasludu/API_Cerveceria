@@ -4,25 +4,25 @@ Este documento detalla las principales oportunidades de mejora identificadas par
 
 ## 1. Arquitectura y Rendimiento
 
-* **Caché Distribuida (Redis)**: Implementar estrategias de caché para consultas de solo lectura con alta frecuencia y baja volatilidad (ej. el catálogo de cervecerías y cervezas). Esto reducirá la carga en la base de datos y mejorará los tiempos de respuesta.
-* **Paginación y Filtrado Dinámico**: Modificar los endpoints que devuelven colecciones (como `GET /api/v1/User/get-all` o consultas de inventario) para que soporten parámetros de paginación (`PageSize`, `PageNumber`) y filtros, evitando la saturación de memoria.
-* **Resiliencia con Polly**: Integrar políticas de reintentos (*retries*), *circuit breakers* y *timeouts* en la capa de infraestructura, especialmente si la API se comunica con servicios externos o para la resiliencia de la conexión a la base de datos.
+- [x] **Caché Distribuida (Redis)**: Implementar estrategias de caché para consultas de solo lectura con alta frecuencia y baja volatilidad (ej. el catálogo de cervecerías y cervezas). Esto reducirá la carga en la base de datos y mejorará los tiempos de respuesta.
+- [x] **Paginación y Filtrado Dinámico**: Modificar los endpoints que devuelven colecciones (como `GET /api/v1/User/get-all` o consultas de inventario) para que soporten parámetros de paginación (`PageSize`, `PageNumber`) y filtros, evitando la saturación de memoria.
+- [x] **Resiliencia con Polly**: Integrar políticas de reintentos (*retries*), *circuit breakers* y *timeouts* en la capa de infraestructura, especialmente si la API se comunica con servicios externos o para la resiliencia de la conexión a la base de datos.
 
 ## 2. Seguridad y Autorización
 
-* **Control de Acceso Basado en Roles (RBAC)**: Reforzar la seguridad añadiendo atributos de autorización específicos (ej. `[Authorize(Roles = "Admin")]`) en endpoints sensibles como la gestión de usuarios (`UserController`) y la gestión de inventario en `WholesalerController`.
-* **Rotación y Refresco de Tokens**: Implementar un flujo de *Refresh Tokens* en la autenticación JWT para mejorar la experiencia del usuario manteniendo la seguridad sin forzar inicios de sesión frecuentes.
+- [x] **Control de Acceso Basado en Roles (RBAC)**: Reforzar la seguridad añadiendo atributos de autorización específicos (ej. `[Authorize(Roles = "Admin")]`) en endpoints sensibles como la gestión de usuarios (`UserController`) y la gestión de inventario en `WholesalerController`.
+- [x] **Rotación y Refresco de Tokens**: Implementar un flujo de *Refresh Tokens* en la autenticación JWT para mejorar la experiencia del usuario manteniendo la seguridad sin forzar inicios de sesión frecuentes.
 
 ## 3. Observabilidad y Monitoreo
 
-* **OpenTelemetry y Trazabilidad**: Configurar OpenTelemetry para exportar trazas, métricas y logs a herramientas como Jaeger, Prometheus o Grafana.
-* **Logging Estructurado**: Integrar **Serilog** enriquecido con identificadores de correlación (*Correlation IDs*) para rastrear el flujo completo de una solicitud a lo largo de todos los manejadores de MediatR.
-* **Health Checks Avanzados**: Extender los controles de salud nativos de ASP.NET Core (`/health`) para verificar no solo que la API esté viva, sino también la conectividad con la base de datos SQL y Redis.
+- [x] **OpenTelemetry y Trazabilidad**: Configurar OpenTelemetry para exportar trazas, métricas y logs a herramientas como Jaeger, Prometheus o Grafana.
+- [x] **Logging Estructurado**: Integrar **Serilog** enriquecido con identificadores de correlación (*Correlation IDs*) para rastrear el flujo completo de una solicitud a lo largo de todos los manejadores de MediatR.
+- [x] **Health Checks Avanzados**: Extender los controles de salud nativos de ASP.NET Core (`/health`) para verificar no solo que la API esté viva, sino también la conectividad con la base de datos SQL y Redis.
 
 ## 4. Calidad de Código y Pruebas
 
-* **Pruebas de Integración (E2E)**: Complementar las pruebas unitarias existentes en `Application.UnitTests` con pruebas de integración reales utilizando `WebApplicationFactory` y bases de datos en memoria o contenedores de Docker (Testcontainers).
-* **Validación Centralizada (Pipeline Behaviors)**: Asegurar que todos los comandos y consultas pasen por un comportamiento de validación de MediatR (usando FluentValidation) que detenga la ejecución y retorne un error estandarizado si la solicitud es inválida.
+- [x] **Pruebas de Integración (E2E)**: Complementar las pruebas unitarias existentes en `Application.UnitTests` con pruebas de integración reales utilizando `WebApplicationFactory` y bases de datos en memoria o contenedores de Docker (Testcontainers).
+- [x] **Validación Centralizada (Pipeline Behaviors)**: Asegurar que todos los comandos y consultas pasen por un comportamiento de validación de MediatR (usando FluentValidation) que detenga la ejecución y retorne un error estandarizado si la solicitud es inválida.
 
 ## 5. Experiencia de Desarrollo y Documentación
 

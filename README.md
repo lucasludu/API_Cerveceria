@@ -20,6 +20,15 @@ La API funciona como el motor principal (*backend*) de una plataforma de distrib
 * **Manejo de Inventario**: Endpoint para registrar el reabastecimiento de cervezas a un Mayorista específico.
 * **Cotizador Inteligente**: Un motor de cotizaciones que procesa pedidos validando que no haya productos duplicados, asegurando la existencia de stock, y aplicando un **10% de descuento** en compras de más de 10 unidades, o un **20% de descuento** si se superan las 20 unidades.
 
+### 🌟 Mejoras "Enterprise" Añadidas
+
+A lo largo de la evolución del proyecto, se incorporaron estándares listos para producción (Enterprise Level):
+1. **Rendimiento**: Implementación de **Redis Cache** (mediante decoradores) para optimizar consultas frecuentes y **Paginación Dinámica** de resultados.
+2. **Seguridad Avanzada**: Autenticación reforzada con **JWT Refresh Tokens** y Control de Acceso por Roles (RBAC).
+3. **Resiliencia**: Políticas de reintentos (*Retries* y *Timeouts*) gestionadas globalmente por **Polly**.
+4. **Observabilidad Completa**: Instrumentación OTLP mediante **OpenTelemetry** para trazas, uso de **Serilog** para logs estructurados y endpoints de **Health Checks** verificando DB y Redis.
+5. **Pruebas de Integración (E2E)**: Cobertura automatizada mediante **xUnit** y `WebApplicationFactory` interactuando con clientes HTTP reales contra bases de datos en memoria.
+
 ## 🧠 Thought Process
 
 When approaching this challenge, I decided to use a **Clean Architecture** approach based on .NET 10 to ensure separation of concerns, high maintainability, and testability.

@@ -51,12 +51,17 @@ Se han aplicado múltiples patrones para garantizar la mantenibilidad y desacopl
 
 ## 5. Otras Mejores Prácticas
 
+* **Caché Distribuida:** Integración de Redis (`StackExchange.Redis`) y Decoradores para optimizar la velocidad de lectura en catálogos y disminuir la carga en la DB.
+* **Resiliencia y Tolerancia a Fallos:** Configuración de políticas de reintento (`Retry`) y Timeout con la librería **Polly** para llamadas HTTP y bases de datos.
+* **Observabilidad Avanzada:** Instrumentación con **OpenTelemetry** (OTLP), métricas y **Serilog** para logs estructurados y tiempos de respuesta.
+* **Health Checks:** Monitorización continua a través de `/health` verificando conectividad a SQL Server y Redis.
+* **Pruebas de Integración:** Entorno robusto E2E utilizando `WebApplicationFactory` y bases de datos en memoria con **xUnit**.
 * **Global Exception Handling:** Uso de un Middleware personalizado para capturar errores y devolver códigos de estado HTTP apropiados (400, 404, 500) en un formato JSON consistente.
 * **AutoMapper:** Mapeo automático entre Entidades de Dominio y DTOs para evitar el código "boilerplate" y proteger el modelo de dominio.
-* **Pipeline Behaviors:** Validación automática de modelos antes de que lleguen al Handler mediante `ValidationBehaviour`.
-* **Identity Framework:** Uso de estándares de la industria para la gestión de usuarios, contraseñas y roles.
+* **Pipeline Behaviors:** Validación automática de modelos antes de que lleguen al Handler mediante `ValidationBehaviour` y registro de métricas de tiempo de ejecución con `LoggingBehavior`.
+* **Identity Framework:** Uso de estándares de la industria para la gestión de usuarios, contraseñas y roles, incluyendo Refresh Tokens (JWT) y Control de Acceso (RBAC).
 * **Documentación con Swagger:** Configuración avanzada de Swagger para incluir soporte de seguridad JWT y versionamiento de API.
-* **Pruebas Unitarias:** Estructura preparada en `Application.UnitTests` para garantizar la calidad del código en los comandos críticos como la generación de cotizaciones.
+* **Paginación de API:** Parámetros unificados en los Handlers para devolver respuestas paginadas (`PagedResponse`) controlando el consumo de memoria en consultas extensas.
 
 ---
 *Documento generado por el Arquitecto de Software a cargo del proyecto.*
