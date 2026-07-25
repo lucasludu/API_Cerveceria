@@ -31,7 +31,7 @@ namespace WebApi.IntegrationTests
 
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
-                    options.UseInMemoryDatabase("InMemoryDbForTesting");
+                    options.UseInMemoryDatabase("InMemoryDbForTesting_" + System.Guid.NewGuid().ToString());
                 });
             });
         }

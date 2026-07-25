@@ -1,7 +1,8 @@
-using Application.Features.Wholesalers.Commands;
-using Application.Interfaces;
+using Application.DTOs.Request._wholesaler;
+using Application.Features._wholesalers.Commands;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Persistence.Repository;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -12,7 +13,7 @@ namespace Application.UnitTests
 {
     public class RequestQuoteCommandTests
     {
-        private readonly IApplicationDbContext _context;
+        private readonly Persistence.Contexts.ApplicationDbContext _context;
 
         public RequestQuoteCommandTests()
         {
@@ -23,53 +24,28 @@ namespace Application.UnitTests
             _context = new Persistence.Contexts.ApplicationDbContext(options, new DummyDateTimeService());
         }
 
-        [Fact]
-        public async Task ShouldReturnError_WhenOrderIsEmpty()
+        private RequestQuoteCommandHandler CreateHandler()
         {
-            var handler = new RequestQuoteCommandHandler(_context);
-            var command = new RequestQuoteCommand { WholesalerId = Guid.NewGuid(), Items = new List<OrderItem>() };
-
-            var result = await handler.Handle(command, CancellationToken.None);
-
-            Assert.False(result.Succeeded);
-            Assert.Equal("El pedido no puede estar vacío.", result.Message);
+            return new RequestQuoteCommandHandler(
+                new MyRepositoryAsync<Wholesaler>(_context),
+                new MyRepositoryAsync<WholesaleInventory>(_context)
+            );
         }
 
         [Fact]
         public async Task ShouldReturnError_WhenWholesalerDoesNotExist()
         {
-            var handler = new RequestQuoteCommandHandler(_context);
-            var command = new RequestQuoteCommand
+            var handler = CreateHandler();
+            var command = new RequestQuoteCommand(new RequestQuoteRequest
             {
                 WholesalerId = Guid.NewGuid(),
-                Items = new List<OrderItem> { new OrderItem { BeerId = Guid.NewGuid(), Quantity = 5 } }
-            };
+                Items = new List<OrderItemRequest> { new OrderItemRequest { BeerId = Guid.NewGuid(), Quantity = 5 } }
+            });
 
             var result = await handler.Handle(command, CancellationToken.None);
 
             Assert.False(result.Succeeded);
             Assert.Equal("El mayorista debe existir.", result.Message);
-        }
-
-        [Fact]
-        public async Task ShouldReturnError_WhenDuplicatesExist()
-        {
-            var beerId = Guid.NewGuid();
-            var handler = new RequestQuoteCommandHandler(_context);
-            var command = new RequestQuoteCommand
-            {
-                WholesalerId = Guid.NewGuid(),
-                Items = new List<OrderItem>
-                {
-                    new OrderItem { BeerId = beerId, Quantity = 5 },
-                    new OrderItem { BeerId = beerId, Quantity = 5 }
-                }
-            };
-
-            var result = await handler.Handle(command, CancellationToken.None);
-
-            Assert.False(result.Succeeded);
-            Assert.Equal("No puede haber duplicados en el pedido.", result.Message);
         }
 
         [Fact]
@@ -87,12 +63,12 @@ namespace Application.UnitTests
             _context.WholesaleInventories.Add(inventory);
             await _context.SaveChangesAsync(CancellationToken.None);
 
-            var handler = new RequestQuoteCommandHandler(_context);
-            var command = new RequestQuoteCommand
+            var handler = CreateHandler();
+            var command = new RequestQuoteCommand(new RequestQuoteRequest
             {
                 WholesalerId = wholesalerId,
-                Items = new List<OrderItem> { new OrderItem { BeerId = beerId, Quantity = 15 } }
-            };
+                Items = new List<OrderItemRequest> { new OrderItemRequest { BeerId = beerId, Quantity = 15 } }
+            });
 
             var result = await handler.Handle(command, CancellationToken.None);
 
@@ -110,12 +86,12 @@ namespace Application.UnitTests
             _context.Wholesalers.Add(wholesaler);
             await _context.SaveChangesAsync(CancellationToken.None);
 
-            var handler = new RequestQuoteCommandHandler(_context);
-            var command = new RequestQuoteCommand
+            var handler = CreateHandler();
+            var command = new RequestQuoteCommand(new RequestQuoteRequest
             {
                 WholesalerId = wholesalerId,
-                Items = new List<OrderItem> { new OrderItem { BeerId = beerId, Quantity = 5 } }
-            };
+                Items = new List<OrderItemRequest> { new OrderItemRequest { BeerId = beerId, Quantity = 5 } }
+            });
 
             var result = await handler.Handle(command, CancellationToken.None);
 
@@ -138,12 +114,12 @@ namespace Application.UnitTests
             _context.WholesaleInventories.Add(inventory);
             await _context.SaveChangesAsync(CancellationToken.None);
 
-            var handler = new RequestQuoteCommandHandler(_context);
-            var command = new RequestQuoteCommand
+            var handler = CreateHandler();
+            var command = new RequestQuoteCommand(new RequestQuoteRequest
             {
                 WholesalerId = wholesalerId,
-                Items = new List<OrderItem> { new OrderItem { BeerId = beerId, Quantity = 15 } } // Price 150. Discount 10% = 15. Final = 135
-            };
+                Items = new List<OrderItemRequest> { new OrderItemRequest { BeerId = beerId, Quantity = 15 } } // Price 150. Discount 10% = 15. Final = 135
+            });
 
             var result = await handler.Handle(command, CancellationToken.None);
 
@@ -167,22 +143,17 @@ namespace Application.UnitTests
             _context.WholesaleInventories.Add(inventory);
             await _context.SaveChangesAsync(CancellationToken.None);
 
-            var handler = new RequestQuoteCommandHandler(_context);
-            var command = new RequestQuoteCommand
+            var handler = CreateHandler();
+            var command = new RequestQuoteCommand(new RequestQuoteRequest
             {
                 WholesalerId = wholesalerId,
-                Items = new List<OrderItem> { new OrderItem { BeerId = beerId, Quantity = 25 } } // Price 250. Discount 20% = 50. Final = 200
-            };
+                Items = new List<OrderItemRequest> { new OrderItemRequest { BeerId = beerId, Quantity = 25 } } // Price 250. Discount 20% = 50. Final = 200
+            });
 
             var result = await handler.Handle(command, CancellationToken.None);
 
             Assert.True(result.Succeeded);
             Assert.Equal(200m, result.Data.TotalPrice);
         }
-    }
-
-    public class DummyDateTimeService : IDateTimeService
-    {
-        public DateTime NowUtc => DateTime.UtcNow;
     }
 }

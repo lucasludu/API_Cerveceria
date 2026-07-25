@@ -1,16 +1,10 @@
 using Application;
 using Persistence;
-using Persistence.Seed;
 using Shared;
 using WebApi.Extensions;
 using WebApi.Middleware;
 using Serilog;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using System.Text.Json;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,50 +25,21 @@ builder.Services.AddApiVersioningExtension();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerDocumentation();
 builder.Services.AddJwtAuthentication(builder.Configuration);
-builder.Services.AddDistributedMemoryCache();
-
-// Configurar HealthChecks
-builder.Services.AddHealthChecks()
-    .AddDbContextCheck<Persistence.Contexts.ApplicationDbContext>("SQL Server");
-
-// Configurar OpenTelemetry
-builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService("API_Cerveceria"))
-    .WithTracing(tracing =>
-    {
-        tracing.AddAspNetCoreInstrumentation();
-        tracing.AddHttpClientInstrumentation();
-        tracing.AddEntityFrameworkCoreInstrumentation();
-        tracing.AddOtlpExporter();
-    })
-    .WithMetrics(metrics =>
-    {
-        metrics.AddAspNetCoreInstrumentation();
-        metrics.AddHttpClientInstrumentation();
-        metrics.AddRuntimeInstrumentation();
-        metrics.AddOtlpExporter();
-    });
+builder.Services.AddRedisCacheExtension(builder.Configuration);
+builder.Services.AddRateLimitingExtension();
+builder.Services.AddHealthCheckExtension();
+builder.Services.AddOpenTelemetryExtension();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<Persistence.Contexts.ApplicationDbContext>();
-    
-    // As per requirements: EnsureDeleted and EnsureCreated to start fresh on every run
-    context.Database.EnsureDeleted();
-    context.Database.EnsureCreated();
+await app.SeedDatabaseAsync();
 
-    await IdentitySeed.SeedAsync(services);
-}
-
-// Middleware para redirigir "/" a "/swagger" sin generar un endpoint visible en Swagger
+// Middleware para redirigir "/" a "/scalar/v1" sin generar un endpoint visible en Scalar
 app.Use(async (context, next) =>
 {
     if (context.Request.Path == "/")
     {
-        context.Response.Redirect("/swagger");
+        context.Response.Redirect("/scalar/v1");
         return;
     }
     await next();
@@ -83,36 +48,20 @@ app.Use(async (context, next) =>
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(variable =>
+    app.MapScalarApiReference(options =>
     {
-        variable.DefaultModelsExpandDepth(-1);
+        options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
     });
 }
 app.UseHttpsRedirection();
+
+app.UseRateLimiter();
 
 app.UseMiddleware<ErrorHandlerMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-
-app.MapHealthChecks("/health", new HealthCheckOptions
-{
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        var result = JsonSerializer.Serialize(new
-        {
-            status = report.Status.ToString(),
-            checks = report.Entries.Select(e => new
-            {
-                name = e.Key,
-                status = e.Value.Status.ToString(),
-                description = e.Value.Description
-            })
-        });
-        await context.Response.WriteAsync(result);
-    }
-});
+app.UseHealthCheckExtension();
 
 app.Run();
 

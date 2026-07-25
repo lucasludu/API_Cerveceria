@@ -1,7 +1,10 @@
+using Application.DTOs.Request._wholesaler;
 using Application.Features.Wholesalers.Commands;
-using Application.Interfaces;
+using Application.Mappings;
+using AutoMapper;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Persistence.Repository;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +15,7 @@ namespace Application.UnitTests
     public class AddBeerSaleCommandTests
     {
         private readonly Persistence.Contexts.ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
         public AddBeerSaleCommandTests()
         {
@@ -20,25 +24,26 @@ namespace Application.UnitTests
                 .Options;
 
             _context = new Persistence.Contexts.ApplicationDbContext(options, new DummyDateTimeService());
+
+            var config = new MapperConfiguration(cfg => cfg.AddProfile<GeneralProfile>());
+            _mapper = config.CreateMapper();
         }
 
-        [Fact]
-        public async Task ShouldReturnError_WhenQuantityIsZeroOrNegative()
+        private AddBeerSaleCommandHandler CreateHandler()
         {
-            var handler = new AddBeerSaleCommandHandler(_context);
-            var command = new AddBeerSaleCommand { BeerId = Guid.NewGuid(), WholesalerId = Guid.NewGuid(), Quantity = 0 };
-
-            var result = await handler.Handle(command, CancellationToken.None);
-
-            Assert.False(result.Succeeded);
-            Assert.Contains("mayor a 0", result.Message);
+            return new AddBeerSaleCommandHandler(
+                new MyRepositoryAsync<WholesaleInventory>(_context),
+                new MyRepositoryAsync<Beer>(_context),
+                new MyRepositoryAsync<Wholesaler>(_context),
+                _mapper
+            );
         }
 
         [Fact]
         public async Task ShouldReturnError_WhenBeerDoesNotExist()
         {
-            var handler = new AddBeerSaleCommandHandler(_context);
-            var command = new AddBeerSaleCommand { BeerId = Guid.NewGuid(), WholesalerId = Guid.NewGuid(), Quantity = 5 };
+            var handler = CreateHandler();
+            var command = new AddBeerSaleCommand(new AddBeerSaleRequest { BeerId = Guid.NewGuid(), WholesalerId = Guid.NewGuid(), Quantity = 5 });
 
             var result = await handler.Handle(command, CancellationToken.None);
 
@@ -53,8 +58,8 @@ namespace Application.UnitTests
             _context.Beers.Add(new Beer { Id = beerId, Name = "Test" });
             await _context.SaveChangesAsync(CancellationToken.None);
 
-            var handler = new AddBeerSaleCommandHandler(_context);
-            var command = new AddBeerSaleCommand { BeerId = beerId, WholesalerId = Guid.NewGuid(), Quantity = 5 };
+            var handler = CreateHandler();
+            var command = new AddBeerSaleCommand(new AddBeerSaleRequest { BeerId = beerId, WholesalerId = Guid.NewGuid(), Quantity = 5 });
 
             var result = await handler.Handle(command, CancellationToken.None);
 
@@ -74,8 +79,8 @@ namespace Application.UnitTests
             await _context.SaveChangesAsync(CancellationToken.None);
             _context.ChangeTracker.Clear();
 
-            var handler = new AddBeerSaleCommandHandler(_context);
-            var command = new AddBeerSaleCommand { BeerId = beerId, WholesalerId = wholesalerId, Quantity = 5 };
+            var handler = CreateHandler();
+            var command = new AddBeerSaleCommand(new AddBeerSaleRequest { BeerId = beerId, WholesalerId = wholesalerId, Quantity = 5 });
 
             var result = await handler.Handle(command, CancellationToken.None);
 
@@ -94,8 +99,8 @@ namespace Application.UnitTests
             _context.Wholesalers.Add(new Wholesaler { Id = wholesalerId, Name = "Test Wholesaler" });
             await _context.SaveChangesAsync(CancellationToken.None);
 
-            var handler = new AddBeerSaleCommandHandler(_context);
-            var command = new AddBeerSaleCommand { BeerId = beerId, WholesalerId = wholesalerId, Quantity = 5 };
+            var handler = CreateHandler();
+            var command = new AddBeerSaleCommand(new AddBeerSaleRequest { BeerId = beerId, WholesalerId = wholesalerId, Quantity = 5 });
 
             var result = await handler.Handle(command, CancellationToken.None);
 

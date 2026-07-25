@@ -4,12 +4,12 @@ using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using Application.Features._auth.DTOs.Request;
-using Application.Features._auth.DTOs.Response;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Application.DTOs.Request._auth;
+using Application.DTOs.Response._auth;
 
 namespace Persistence.Service
 {

@@ -1,12 +1,14 @@
-using Application.Features.Beers.Commands;
-using Microsoft.AspNetCore.Mvc;
+using Application.Features._beers.Commands.CreateBeerCommands;
+using Application.Features._beers.Commands.DeleteBeerCommands;
+using Application.Features._beers.Commands.UpdateBeerCommands;
 using Asp.Versioning;
-using System;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers.v1
 {
     [ApiVersion("1.0")]
+    [Authorize(Roles = "Admin,Brewery")]
     public class BeerController : BaseApiController
     {
         [HttpPost]
@@ -18,7 +20,7 @@ namespace WebApi.Controllers.v1
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(Guid id, UpdateBeerCommand command)
         {
-            if (id != command.Id)
+            if (id != command.Request.Id)
             {
                 return BadRequest();
             }
@@ -28,7 +30,7 @@ namespace WebApi.Controllers.v1
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            return Ok(await Mediator.Send(new DeleteBeerCommand { Id = id }));
+            return Ok(await Mediator.Send(new DeleteBeerCommand(id)));
         }
     }
 }

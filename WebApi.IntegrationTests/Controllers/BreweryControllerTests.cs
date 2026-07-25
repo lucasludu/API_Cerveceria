@@ -33,8 +33,7 @@ namespace WebApi.IntegrationTests.Controllers
             var response = await _client.GetAsync($"/api/v1/Brewery/{System.Guid.NewGuid()}/beers"); 
 
             // Assert
-            response.EnsureSuccessStatusCode(); 
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
     }
 }

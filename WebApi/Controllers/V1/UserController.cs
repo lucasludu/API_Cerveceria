@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 using Application.Parameters;
 using Microsoft.AspNetCore.Authorization;
+using Application.Features._users.Queries;
+using Application.Features._users.Commands;
 
 namespace WebApi.Controllers.V1
 {
@@ -9,36 +11,34 @@ namespace WebApi.Controllers.V1
     [Authorize(Roles = "Admin")]
     public class UserController : BaseApiController
     {
-
-        [HttpGet("get")]
-        public async Task<IActionResult> GetUser([FromBody] string request)
+        [HttpGet("get/{id}")]
+        public async Task<IActionResult> GetUser(string id)
         {
-            return Ok();
+            return Ok(await Mediator.Send(new GetUserByIdQuery { Id = id }));
         }
 
         [HttpGet("get-all")]
         public async Task<IActionResult> GetAllUsers([FromQuery] RequestParameters filter)
         {
-            return Ok();
+            return Ok(await Mediator.Send(new GetAllUsersQuery { Parameters = filter }));
         }
 
         [HttpPatch("update")]
-        public async Task<IActionResult> UpdateUser([FromBody] string request)
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserCommand command)
         {
-            return Ok();
+            return Ok(await Mediator.Send(command));
         }
 
-        [HttpPatch("toggle-active")]
-        public async Task<IActionResult> ToggleUserActive([FromBody] string request)
+        [HttpPatch("toggle-active/{id}")]
+        public async Task<IActionResult> ToggleUserActive(string id)
         {
-            return Ok();
+            return Ok(await Mediator.Send(new ToggleUserActiveCommand { Id = id }));
         }
 
-        [HttpDelete("delete")]
-        public async Task<IActionResult> DeleteUser([FromBody] string request)
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> DeleteUser(string id)
         {
-            return Ok();
+            return Ok(await Mediator.Send(new DeleteUserCommand { Id = id }));
         }
-
     }
 }

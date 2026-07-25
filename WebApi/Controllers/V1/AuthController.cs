@@ -3,7 +3,7 @@ using Application.Features._auth.Commands.RegisterUserCommands;
 using Application.Features._auth.Commands.RefreshTokenCommands;
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
-using Application.Features._auth.DTOs.Request;
+using Application.DTOs.Request._auth;
 
 namespace WebApi.Controllers.V1
 {
@@ -48,7 +48,7 @@ namespace WebApi.Controllers.V1
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
-            var result = await Mediator.Send(new RefreshTokenCommand { RefreshTokenRequest = request });
+            var result = await Mediator.Send(new RefreshTokenCommand(request));
 
             return (!result.Succeeded)
                 ? Unauthorized(result)
