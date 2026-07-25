@@ -29,6 +29,7 @@ builder.Services.AddRedisCacheExtension(builder.Configuration);
 builder.Services.AddRateLimitingExtension();
 builder.Services.AddHealthCheckExtension();
 builder.Services.AddOpenTelemetryExtension();
+builder.Services.AddCorsExtension();
 
 var app = builder.Build();
 
@@ -55,6 +56,8 @@ if (app.Environment.IsDevelopment())
 }
 app.UseHttpsRedirection();
 
+app.UseRouting();
+app.UseCors("CorsPolicy");
 app.UseRateLimiter();
 
 app.UseMiddleware<ErrorHandlerMiddleware>();
