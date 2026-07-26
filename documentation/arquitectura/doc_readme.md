@@ -23,6 +23,77 @@ El proyecto implementa una **Arquitectura Limpia (Clean Architecture)** u **Onio
 * **Persistence (Persistencia):** Implementación del acceso a datos mediante Entity Framework Core, configuraciones de base de datos (Fluent API), repositorios y migraciones.
 * **Shared (Infraestructura Compartida):** Servicios transversales como la gestión de fechas (`DateTimeService`) y utilitarios comunes.
 * **WebApi (Presentación):** Capa de entrada que expone los endpoints REST, gestiona el middleware de excepciones y la configuración de Swagger.
+* **Proyectos de .NET Aspire:** 
+  * `API_Cerveceria.AppHost`: Orquestador que inicia y vincula todos los servicios (API, Frontend, Redis).
+  * `API_Cerveceria.ServiceDefaults`: Configuración centralizada de telemetría (OpenTelemetry), resiliencia y métricas de salud (HealthChecks) que comparten los servicios.
+* **Frontend:** Proyecto React (Vite) enlazado al orquestador.
+* **Testing:** Proyecto `Application.UnitTests` para verificar el correcto funcionamiento del núcleo de la aplicación.
+
+### Diagrama de Arquitectura de la Solución
+
+El siguiente diagrama muestra cómo interactúan todas las capas del proyecto y cómo **.NET Aspire** envuelve a la solución para su ejecución y orquestación.
+
+```mermaid
+flowchart TD
+    %% Aspire Orchestration Layer
+    subgraph Aspire ["Orquestación (.NET Aspire)"]
+        direction TB
+        AppHost[API_Cerveceria.AppHost]
+        ServiceDefaults[API_Cerveceria.ServiceDefaults]
+    end
+
+    %% Client Layer
+    subgraph Client ["Cliente"]
+        direction TB
+        Frontend["Frontend (React / Vite)"]
+    end
+
+    %% Clean Architecture API
+    subgraph API ["Backend (Clean Architecture)"]
+        direction TB
+        WebApi["WebApi (Presentación)"]
+        Application["Application (Lógica, CQRS)"]
+        Domain["Domain (Entidades Core)"]
+        Persistence["Persistence (EF Core, Repositorios)"]
+        Shared["Shared (Servicios Comunes)"]
+
+        WebApi --> Application
+        WebApi --> Persistence
+        WebApi --> Shared
+        Application --> Domain
+        Persistence --> Domain
+        Persistence --> Application
+        Shared --> Application
+    end
+    
+    %% Infrastructure
+    subgraph Infra ["Infraestructura Externa"]
+        direction TB
+        Redis[(Redis Cache)]
+        DB[(Base de Datos)]
+    end
+
+    %% Relationships
+    AppHost -. "Orquesta y levanta" .-> Frontend
+    AppHost -. "Orquesta y provee Redis" .-> WebApi
+    AppHost -. "Aplica telemetría" .-> ServiceDefaults
+    
+    ServiceDefaults -. "Se inyecta en" .-> WebApi
+    
+    Frontend == "Llamadas HTTP REST" === WebApi
+    
+    WebApi --> Redis
+    Persistence --> DB
+
+    %% Styles
+    classDef aspire fill:#f0f4ff,stroke:#2b5cff,stroke-width:2px;
+    classDef cleanArch fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef infra fill:#fff3e0,stroke:#ff9800,stroke-width:2px;
+    
+    class AppHost,ServiceDefaults aspire;
+    class WebApi,Application,Domain,Persistence,Shared cleanArch;
+    class Redis,DB infra;
+```
 
 ---
 
