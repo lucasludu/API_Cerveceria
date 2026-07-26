@@ -8,6 +8,8 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 // Configurar Serilog
 builder.Host.UseSerilog((context, loggerConfiguration) =>
 {
@@ -32,6 +34,8 @@ builder.Services.AddOpenTelemetryExtension();
 builder.Services.AddCorsExtension();
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 await app.SeedDatabaseAsync();
 

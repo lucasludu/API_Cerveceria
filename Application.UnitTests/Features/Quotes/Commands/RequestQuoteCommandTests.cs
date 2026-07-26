@@ -1,5 +1,5 @@
 using Application.DTOs.Request._wholesaler;
-using Application.Features._wholesalers.Commands;
+using Application.Features._wholesalers.Commands.RequestQuoteCommands;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Repository;
@@ -8,8 +8,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using Application.UnitTests.Common;
 
-namespace Application.UnitTests
+namespace Application.UnitTests.Features.Quotes.Commands
 {
     public class RequestQuoteCommandTests
     {
@@ -17,6 +18,7 @@ namespace Application.UnitTests
 
         public RequestQuoteCommandTests()
         {
+            // [ARRANGE] - Global Context Setup
             var options = new DbContextOptionsBuilder<Persistence.Contexts.ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
@@ -33,8 +35,11 @@ namespace Application.UnitTests
         }
 
         [Fact]
-        public async Task ShouldReturnError_WhenWholesalerDoesNotExist()
+        public async Task Should_ReturnError_When_WholesalerDoesNotExist()
         {
+            // ==========================================
+            // 1. ARRANGE
+            // ==========================================
             var handler = CreateHandler();
             var command = new RequestQuoteCommand(new RequestQuoteRequest
             {
@@ -42,15 +47,24 @@ namespace Application.UnitTests
                 Items = new List<OrderItemRequest> { new OrderItemRequest { BeerId = Guid.NewGuid(), Quantity = 5 } }
             });
 
+            // ==========================================
+            // 2. ACT
+            // ==========================================
             var result = await handler.Handle(command, CancellationToken.None);
 
+            // ==========================================
+            // 3. ASSERT
+            // ==========================================
             Assert.False(result.Succeeded);
             Assert.Equal("El mayorista debe existir.", result.Message);
         }
 
         [Fact]
-        public async Task ShouldReturnError_WhenStockIsInsufficient()
+        public async Task Should_ReturnError_When_StockIsInsufficient()
         {
+            // ==========================================
+            // 1. ARRANGE
+            // ==========================================
             var wholesalerId = Guid.NewGuid();
             var beerId = Guid.NewGuid();
 
@@ -70,15 +84,24 @@ namespace Application.UnitTests
                 Items = new List<OrderItemRequest> { new OrderItemRequest { BeerId = beerId, Quantity = 15 } }
             });
 
+            // ==========================================
+            // 2. ACT
+            // ==========================================
             var result = await handler.Handle(command, CancellationToken.None);
 
+            // ==========================================
+            // 3. ASSERT
+            // ==========================================
             Assert.False(result.Succeeded);
             Assert.Contains("no puede ser mayor que el stock del mayorista", result.Message);
         }
 
         [Fact]
-        public async Task ShouldReturnError_WhenBeerNotSoldByWholesaler()
+        public async Task Should_ReturnError_When_BeerNotSoldByWholesaler()
         {
+            // ==========================================
+            // 1. ARRANGE
+            // ==========================================
             var wholesalerId = Guid.NewGuid();
             var beerId = Guid.NewGuid();
 
@@ -93,15 +116,24 @@ namespace Application.UnitTests
                 Items = new List<OrderItemRequest> { new OrderItemRequest { BeerId = beerId, Quantity = 5 } }
             });
 
+            // ==========================================
+            // 2. ACT
+            // ==========================================
             var result = await handler.Handle(command, CancellationToken.None);
 
+            // ==========================================
+            // 3. ASSERT
+            // ==========================================
             Assert.False(result.Succeeded);
             Assert.Contains("no es vendida por este mayorista", result.Message);
         }
 
         [Fact]
-        public async Task ShouldApply10PercentDiscount_WhenUnitsGreaterThan10()
+        public async Task Should_Apply10PercentDiscount_When_UnitsGreaterThan10()
         {
+            // ==========================================
+            // 1. ARRANGE
+            // ==========================================
             var wholesalerId = Guid.NewGuid();
             var beerId = Guid.NewGuid();
 
@@ -121,16 +153,25 @@ namespace Application.UnitTests
                 Items = new List<OrderItemRequest> { new OrderItemRequest { BeerId = beerId, Quantity = 15 } } // Price 150. Discount 10% = 15. Final = 135
             });
 
+            // ==========================================
+            // 2. ACT
+            // ==========================================
             var result = await handler.Handle(command, CancellationToken.None);
 
+            // ==========================================
+            // 3. ASSERT
+            // ==========================================
             Assert.True(result.Succeeded);
             Assert.Equal(135m, result.Data.TotalPrice);
             Assert.Contains("15", result.Data.Summary);
         }
 
         [Fact]
-        public async Task ShouldApply20PercentDiscount_WhenUnitsGreaterThan20()
+        public async Task Should_Apply20PercentDiscount_When_UnitsGreaterThan20()
         {
+            // ==========================================
+            // 1. ARRANGE
+            // ==========================================
             var wholesalerId = Guid.NewGuid();
             var beerId = Guid.NewGuid();
 
@@ -150,8 +191,14 @@ namespace Application.UnitTests
                 Items = new List<OrderItemRequest> { new OrderItemRequest { BeerId = beerId, Quantity = 25 } } // Price 250. Discount 20% = 50. Final = 200
             });
 
+            // ==========================================
+            // 2. ACT
+            // ==========================================
             var result = await handler.Handle(command, CancellationToken.None);
 
+            // ==========================================
+            // 3. ASSERT
+            // ==========================================
             Assert.True(result.Succeeded);
             Assert.Equal(200m, result.Data.TotalPrice);
         }

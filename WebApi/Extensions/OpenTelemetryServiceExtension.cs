@@ -16,14 +16,14 @@ namespace WebApi.Extensions
                     tracing.AddAspNetCoreInstrumentation();
                     tracing.AddHttpClientInstrumentation();
                     tracing.AddEntityFrameworkCoreInstrumentation();
-                    tracing.AddOtlpExporter();
+                    // tracing.AddOtlpExporter();
                 })
                 .WithMetrics(metrics =>
                 {
                     metrics.AddAspNetCoreInstrumentation();
                     metrics.AddHttpClientInstrumentation();
                     metrics.AddRuntimeInstrumentation();
-                    metrics.AddOtlpExporter();
+                    // metrics.AddOtlpExporter();
                 });
         }
     }
